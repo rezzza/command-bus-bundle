@@ -1,0 +1,25 @@
+{
+    "name": "rezzza/command-bus-bundle",
+    "type": "symfony bundle",
+    "description": "rezzza/command-bus integration to Symfony",
+    "keywords": ["command", "bus", "bundle"],
+    "license": "MIT",
+    "homepage": "https://github.com/rezzza/command-bus-bundle",
+    "authors": [{
+        "name": "Contributor Guys",
+        "homepage": "https://github.com/rezzza/command-bus-bundle/contributors"
+    }],
+    "require": {
+        "php": ">=5.5.0",
+        "rezzza/command-bus": "~1.0"
+    },
+    "autoload": {
+        "psr-0": { "Rezzza\\CommandBusBundle": "" }
+    },
+    "minimum-stability": "dev",
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    }
+}
