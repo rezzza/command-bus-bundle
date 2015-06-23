@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <parameters>
+        <parameter key="rezzza_command_bus.direct_bus.class">Rezzza\CommandBus\Infra\Provider\Direct\DirectBus</parameter>
+        <parameter key="rezzza_command_bus.snc_redis_bus.class">Rezzza\CommandBusBundle\Provider\SncRedis\SncRedisBus</parameter>
+
+        <parameter key="rezzza_command_bus.snc_redis_provider.class">Rezzza\CommandBusBundle\Provider\SncRedis\SncRedisConsumerProvider</parameter>
+
+        <parameter key="rezzza_command_bus.consumer.class">Rezzza\CommandBus\Domain\Consumer\Consumer</parameter>
+
+        <parameter key="rezzza_command_bus.fail_strategy.retry_then_fail.class">Rezzza\CommandBus\Domain\Consumer\FailStrategy\RetryThenFailStrategy</parameter>
+        <parameter key="rezzza_command_bus.fail_strategy.requeue.class">Rezzza\CommandBus\Domain\Consumer\FailStrategy\RequeueStrategy</parameter>
+        <parameter key="rezzza_command_bus.fail_strategy.none.class">Rezzza\CommandBus\Domain\Consumer\FailStrategy\NoneStrategy</parameter>
+
+        <parameter key="rezzza_command_bus.command_handler_locator.container.class">Rezzza\CommandBusBundle\Handler\ContainerCommandHandlerLocator</parameter>
+
+        <parameter key="rezzza_command_bus.consumer.command.class">Rezzza\CommandBusBundle\Command\ConsumeCommand</parameter>
+
+        <parameter key="rezzza_command_bus.handler.retry_handler.class">Rezzza\CommandBus\Domain\Handler\RetryHandler</parameter>
+    </parameters>
+
+    <services>
+        <service id="rezzza_command_bus.command_handler_locator.container" class="%rezzza_command_bus.command_handler_locator.container.class%" public="false">
+            <argument type="service" id="service_container" />
+        </service>
+
+        <service id="rezzza_command_bus.consumer.command" class="%rezzza_command_bus.consumer.command.class%">
+            <argument type="service" id="service_container" />
+            <tag name="console.command" />
+        </service>
+
+    </services>
+</container>

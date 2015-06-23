@@ -14,7 +14,7 @@
         "rezzza/command-bus": "~1.0"
     },
     "autoload": {
-        "psr-0": { "Rezzza\\CommandBusBundle": "" }
+        "psr-4": { "Rezzza\\CommandBusBundle": "" }
     },
     "minimum-stability": "dev",
     "extra": {
