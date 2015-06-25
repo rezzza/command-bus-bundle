@@ -49,19 +49,19 @@ class RezzzaCommandBusExtension extends Extension
                     new Reference('rezzza_command_bus.command_handler_locator.container'),
                     $this->createLoggerReference()
                 ]);
+                $container->setDefinition($this->getCommandBusServiceName($name), $service);
                 break;
             case 'snc_redis':
                 $service = new Definition('%rezzza_command_bus.snc_redis_bus.class%', [
                     new Reference(sprintf('snc_redis.%s_client', $config['client'])),
                     $this->createLoggerReference()
                 ]);
+                $container->setDefinition($this->getCommandBusServiceName($name), $service);
                 break;
             default:
-                $service = new Reference($config['id']);
+                $container->setAlias($this->getCommandBusServiceName($name), $config['id']);
                 break;
         }
-
-        $container->setDefinition($this->getCommandBusServiceName($name), $service);
     }
 
     private function createConsumer($name, array $config, ContainerBuilder $container)
@@ -80,7 +80,7 @@ class RezzzaCommandBusExtension extends Extension
         $consumerDefinition = new Definition('%rezzza_command_bus.consumer.class%',
             [
                 $provider,
-                new Reference($this->getCommandBusServiceName($config['direct_bus'])),
+                new Reference($this->getCommandBusServiceName($config['bus'])),
                 new Reference($this->getFailStrategyServiceName($config['fail_strategy']))
             ]
         );
@@ -97,24 +97,26 @@ class RezzzaCommandBusExtension extends Extension
                     $config['attempts'],
                     $this->createLoggerReference()
                 ]);
+                $container->setDefinition($this->getFailStrategyServiceName($name), $definition);
                 break;
             case 'requeued':
                 $definition = new Definition('%rezzza_command_bus.fail_strategy.requeue.class%', [
                     new Reference($this->getCommandBusServiceName($config['bus'])),
                     $this->createLoggerReference()
                 ]);
+                $container->setDefinition($this->getFailStrategyServiceName($name), $definition);
                 break;
             case 'none':
                 $definition = new Definition('%rezzza_command_bus.fail_strategy.none.class%', [
                     $this->createLoggerReference()
                 ]);
+                $container->setDefinition($this->getFailStrategyServiceName($name), $definition);
                 break;
             default:
-                $definition = new Reference($config['id']);
+                $container->setAlias($this->getFailStrategyServiceName($name), $config['id']);
                 break;
         }
 
-        $container->setDefinition($this->getFailStrategyServiceName($name), $definition);
     }
 
     public function loadHandlers(array $handlers, ContainerBuilder $container)

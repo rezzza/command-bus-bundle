@@ -34,6 +34,7 @@ class ConsumeCommand extends Command
             ->setDescription('Consume a command bus')
             ->addArgument('command_class', InputArgument::REQUIRED, 'Command to consume.')
             ->addOption('consumer', null, InputOption::VALUE_REQUIRED, 'Which consumer should we use ?', 'default')
+            ->addOption('iteration-limit', 'i', InputOption::VALUE_REQUIRED, 'Limit of iterations, -1 for infinite..', -1)
             ->addOption('time-limit', null, InputOption::VALUE_REQUIRED, 'During how many time this command will listen to the queue.', 60)
             ->addOption('usleep', null, InputOption::VALUE_REQUIRED, 'Micro seconds', 100000)
             ;
@@ -44,15 +45,17 @@ class ConsumeCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $commandClass  = $input->getArgument('command_class');
-        $timeLimit     = (int) $input->getOption('time-limit');
-        $usleep        = (int) $input->getOption('usleep');
-        $maxTime       = time() + $timeLimit;
-        $this->verbose = $input->getOption('verbose');
-        $this->output  = $output;
+        $commandClass   = $input->getArgument('command_class');
+        $timeLimit      = (int) $input->getOption('time-limit');
+        $iterationLimit = (int) $input->getOption('iteration-limit');
+        $usleep         = (int) $input->getOption('usleep');
+        $maxTime        = time() + $timeLimit;
+        $this->verbose  = $input->getOption('verbose');
+        $this->output   = $output;
 
         $consumer     = $this->container->get(sprintf('rezzza_command_bus.command_bus.consumer.%s', $input->getOption('consumer')));
         $live         = true;
+        $iteration    = 0;
         do {
             $response = $consumer->consume($commandClass);
 
@@ -62,13 +65,14 @@ class ConsumeCommand extends Command
                 } else {
                     $this->writeDependVerbosity('<error>F</error>', sprintf('<error>Failed</error>: %s', $response->getError()->getMessage()));
                 }
+                $iteration++;
             } else {
                 $output->write('.');
             }
 
             usleep($usleep);
 
-            if (time() >= $maxTime) {
+            if (time() >= $maxTime || ($iteration >= $iterationLimit && $iterationLimit != -1)) {
                 $live = false;
             }
         } while ($live);

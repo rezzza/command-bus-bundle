@@ -22,6 +22,26 @@ class Configuration implements ConfigurationInterface
     {
         $tb = new TreeBuilder();
         $tb->root('rezzza_command_bus')
+            ->beforeNormalization()
+                ->always(function($v) {
+                    if (false === isset($v['consumers'])) {
+                        return $v;
+                    }
+
+                    foreach ($v['consumers'] as $k => $consumer) {
+                        if (is_scalar($consumer['provider'])) {
+                            $provider = $consumer['provider'];
+                            if (false === array_key_exists($provider, $v['buses'])) {
+                                throw new \InvalidArgumentException(sprintf('Provider “%s“ unknown', $provider));
+                            }
+
+                            $v['consumers'][$k]['provider'] = $v['buses'][$provider];
+                        }
+                    }
+
+                    return $v;
+                })
+            ->end()
             ->children()
                 ->arrayNode('buses')
                     ->cannotBeEmpty()
@@ -62,7 +82,7 @@ class Configuration implements ConfigurationInterface
                                     ->scalarNode('client')->end()
                                 ->end()
                             ->end()
-                            ->scalarNode('direct_bus')->isRequired()->end()
+                            ->scalarNode('bus')->isRequired()->end()
                             ->scalarNode('fail_strategy')->end()
                         ->end()
                     ->end()
