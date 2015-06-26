@@ -56,6 +56,8 @@ class RezzzaCommandBusExtension extends Extension
                     new Reference(sprintf('snc_redis.%s_client', $config['client'])),
                     $this->createLoggerReference()
                 ]);
+                $service->setLazy(true);
+                // because snc redis will initiate connection, and we may not want it.
                 $container->setDefinition($this->getCommandBusServiceName($name), $service);
                 break;
             default:
