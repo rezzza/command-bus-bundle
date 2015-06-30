@@ -97,11 +97,12 @@ class RezzzaCommandBusExtension extends Extension
                 $definition = new Definition('%rezzza_command_bus.fail_strategy.retry_then_fail.class%', [
                     new Reference($this->getCommandBusServiceName($config['bus'])),
                     $config['attempts'],
+                    $config['requeue_on_fail'],
                     $this->createLoggerReference()
                 ]);
                 $container->setDefinition($this->getFailStrategyServiceName($name), $definition);
                 break;
-            case 'requeued':
+            case 'requeue':
                 $definition = new Definition('%rezzza_command_bus.fail_strategy.requeue.class%', [
                     new Reference($this->getCommandBusServiceName($config['bus'])),
                     $this->createLoggerReference()
@@ -128,13 +129,25 @@ class RezzzaCommandBusExtension extends Extension
 
             $definition = new Definition('%rezzza_command_bus.handler.retry_handler.class%', [
                     new Reference($this->getCommandBusServiceName($config['direct_bus'])),
-                    new Reference($this->getFailStrategyServiceName($config['fail_strategy'])),
                     $this->createLoggerReference()
                 ]
             );
-            $definition->addTag('rezzza_command_bus.command_handler', ['command' =>  'Rezzza\CommandBus\Domain\Command\RetryCommand']);
+            $definition->addTag('rezzza_command_bus.command_handler', ['command' => 'Rezzza\CommandBus\Domain\Command\RetryCommand']);
 
             $container->setDefinition('rezzza_command_bus.command_handler.retry', $definition);
+        }
+
+        if (isset($handlers['failed'])) {
+            $config = $handlers['failed'];
+
+            $definition = new Definition('%rezzza_command_bus.handler.failed_handler.class%', [
+                    new Reference($this->getCommandBusServiceName($config['direct_bus'])),
+                    $this->createLoggerReference()
+                ]
+            );
+            $definition->addTag('rezzza_command_bus.command_handler', ['command' => 'Rezzza\CommandBus\Domain\Command\FailedCommand']);
+
+            $container->setDefinition('rezzza_command_bus.command_handler.failed', $definition);
         }
     }
 

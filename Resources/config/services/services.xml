@@ -21,6 +21,7 @@
         <parameter key="rezzza_command_bus.consumer.command.class">Rezzza\CommandBusBundle\Command\ConsumeCommand</parameter>
 
         <parameter key="rezzza_command_bus.handler.retry_handler.class">Rezzza\CommandBus\Domain\Handler\RetryHandler</parameter>
+        <parameter key="rezzza_command_bus.handler.failed_handler.class">Rezzza\CommandBus\Domain\Handler\FailedHandler</parameter>
     </parameters>
 
     <services>
