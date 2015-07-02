@@ -3,6 +3,7 @@
 namespace Rezzza\CommandBusBundle\Provider\SncRedis;
 
 use Rezzza\CommandBus\Infra\Provider\Redis\RedisConsumerProvider;
+use Rezzza\CommandBus\Infra\Provider\Redis\RedisKeyGeneratorInterface;
 
 /**
  * SncRedisConsumerProvider
@@ -15,9 +16,9 @@ class SncRedisConsumerProvider extends RedisConsumerProvider
     /**
      * @param object $client client
      */
-    public function __construct($client)
+    public function __construct($client, RedisKeyGeneratorInterface $keyGenerator)
     {
-        $this->client = $client;
+        $this->client       = $client;
+        $this->keyGenerator = $keyGenerator;
     }
-
 }

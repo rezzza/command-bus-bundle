@@ -2,8 +2,10 @@
 
 namespace Rezzza\CommandBusBundle\Provider\SncRedis;
 
-use Rezzza\CommandBus\Infra\Provider\Redis\RedisBus;
 use Psr\Log\LoggerInterface;
+use Rezzza\CommandBus\Infra\Provider\Redis\RedisBus;
+use Rezzza\CommandBus\Infra\Provider\Redis\RedisKeyGeneratorInterface;
+
 
 /**
  * SncRedisBus
@@ -14,13 +16,15 @@ use Psr\Log\LoggerInterface;
 class SncRedisBus extends RedisBus
 {
     /**
-     * @param object          $client client
-     * @param LoggerInterface $logger logger
+     * @param object                     $client       client
+     * @param RedisKeyGeneratorInterface $keyGenerator keyGenerator
+     * @param LoggerInterface            $logger       logger
      */
-    public function __construct($client, LoggerInterface $logger = null)
+    public function __construct($client, RedisKeyGeneratorInterface $keyGenerator, LoggerInterface $logger = null)
     {
-        $this->client = $client;
-        $this->logger = $logger;
+        $this->client       = $client;
+        $this->keyGenerator = $keyGenerator;
+        $this->logger       = $logger;
     }
 
 }

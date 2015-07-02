@@ -54,6 +54,7 @@ class RezzzaCommandBusExtension extends Extension
             case 'snc_redis':
                 $service = new Definition('%rezzza_command_bus.snc_redis_bus.class%', [
                     new Reference(sprintf('snc_redis.%s_client', $config['client'])),
+                    $this->createRedisKeyGeneratorReference($config['key_generator']),
                     $this->createLoggerReference()
                 ]);
                 $service->setLazy(true);
@@ -71,7 +72,8 @@ class RezzzaCommandBusExtension extends Extension
         switch ($config['provider']['id']) {
             case 'snc_redis':
                 $provider = new Definition('%rezzza_command_bus.snc_redis_provider.class%', [
-                    new Reference(sprintf('snc_redis.%s_client', $config['provider']['client']))
+                    new Reference(sprintf('snc_redis.%s_client', $config['provider']['client'])),
+                    $this->createRedisKeyGeneratorReference($config['provider']['key_generator'])
                 ]);
                 break;
             default:
@@ -83,7 +85,8 @@ class RezzzaCommandBusExtension extends Extension
             [
                 $provider,
                 new Reference($this->getCommandBusServiceName($config['bus'])),
-                new Reference($this->getFailStrategyServiceName($config['fail_strategy']))
+                new Reference($this->getFailStrategyServiceName($config['fail_strategy'])),
+                new Reference('rezzza_command_bus.event_dispatcher')
             ]
         );
 
@@ -159,6 +162,15 @@ class RezzzaCommandBusExtension extends Extension
     private function getFailStrategyServiceName($failStrategy)
     {
         return sprintf('rezzza_command_bus.fail_strategy.%s', $failStrategy);
+    }
+
+    private function createRedisKeyGeneratorReference($service)
+    {
+        if (empty($service)) {
+            return new Definition('Rezzza\CommandBus\Infra\Provider\Redis\RedisKeyGenerator');
+        }
+
+        return new Reference($service);
     }
 
     private function createLoggerReference()

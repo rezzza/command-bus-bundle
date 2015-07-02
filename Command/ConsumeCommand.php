@@ -49,7 +49,7 @@ class ConsumeCommand extends Command
         $timeLimit      = (int) $input->getOption('time-limit');
         $iterationLimit = (int) $input->getOption('iteration-limit');
         $usleep         = (int) $input->getOption('usleep');
-        $maxTime        = time() + $timeLimit;
+        $maxTime        = $timeLimit < 0 ? null : time() + $timeLimit;
         $this->verbose  = $input->getOption('verbose');
         $this->output   = $output;
 
@@ -72,7 +72,7 @@ class ConsumeCommand extends Command
 
             usleep($usleep);
 
-            if (time() >= $maxTime || ($iteration >= $iterationLimit && $iterationLimit != -1)) {
+            if ((null !== $maxTime && time() >= $maxTime) || ($iteration >= $iterationLimit && $iterationLimit != -1)) {
                 $live = false;
             }
         } while ($live);

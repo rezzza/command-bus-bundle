@@ -34,5 +34,10 @@
             <tag name="console.command" />
         </service>
 
+        <service id="rezzza_command_bus.event_dispatcher" class="Symfony\Component\EventDispatcher\ContainerAwareEventDispatcher">
+            <argument type="service" id="service_container" />
+        </service>
+
+
     </services>
 </container>
