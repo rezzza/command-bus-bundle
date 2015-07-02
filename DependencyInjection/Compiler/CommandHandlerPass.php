@@ -2,8 +2,9 @@
 
 namespace Rezzza\CommandBusBundle\DependencyInjection\Compiler;
 
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 
 /**
  * CommandHandlerPass
@@ -26,7 +27,10 @@ class CommandHandlerPass implements CompilerPassInterface
                     throw new \LogicException('Please provide a command with "rezzza_command.command_handler" tag');
                 }
 
-                $services[$data['command']] = $serviceId;
+                $services[$data['command']] = new Definition('Rezzza\CommandBusBundle\Handler\HandlerServiceDefinition', [
+                    $serviceId,
+                    isset($data['method']) ? $data['method'] : null
+                ]);
             }
         }
 

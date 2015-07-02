@@ -5,6 +5,7 @@ namespace Rezzza\CommandBusBundle\Handler;
 use Rezzza\CommandBus\Domain\CommandInterface;
 use Rezzza\CommandBus\Domain\Exception\CommandHandlerNotFoundException;
 use Rezzza\CommandBus\Domain\Handler\CommandHandlerLocatorInterface;
+use Rezzza\CommandBus\Domain\Handler\HandlerDefinition;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ContainerCommandHandlerLocator implements CommandHandlerLocatorInterface
@@ -32,6 +33,15 @@ class ContainerCommandHandlerLocator implements CommandHandlerLocatorInterface
             throw new CommandHandlerNotFoundException($command);
         }
 
-        return $this->container->get($this->handlers[$commandClass]);
+        $definition = $this->handlers[$commandClass];
+
+        if (false === $definition instanceof HandlerServiceDefinition) {
+            return $definition;
+        }
+
+        return new HandlerDefinition(
+            $this->container->get($definition->getService()),
+            $definition->getMethod()
+        );
     }
 }
