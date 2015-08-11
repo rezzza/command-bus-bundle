@@ -47,6 +47,7 @@ class RezzzaCommandBusExtension extends Extension
             case 'direct':
                 $service = new Definition('%rezzza_command_bus.direct_bus.class%', [
                     new Reference('rezzza_command_bus.command_handler_locator.container'),
+                        new Reference('rezzza_command_bus.event_dispatcher'),
                     $this->createLoggerReference()
                 ]);
                 $container->setDefinition($this->getCommandBusServiceName($name), $service);
@@ -55,6 +56,7 @@ class RezzzaCommandBusExtension extends Extension
                 $service = new Definition('%rezzza_command_bus.snc_redis_bus.class%', [
                     new Reference(sprintf('snc_redis.%s_client', $config['client'])),
                     $this->createRedisKeyGeneratorReference($config['key_generator']),
+                    new Reference('rezzza_command_bus.event_dispatcher'),
                     $this->createLoggerReference()
                 ]);
                 $service->setLazy(true);
