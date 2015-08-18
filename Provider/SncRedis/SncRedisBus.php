@@ -5,6 +5,7 @@ namespace Rezzza\CommandBusBundle\Provider\SncRedis;
 use Psr\Log\LoggerInterface;
 use Rezzza\CommandBus\Infra\Provider\Redis\RedisBus;
 use Rezzza\CommandBus\Infra\Provider\Redis\RedisKeyGeneratorInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 
 /**
@@ -16,15 +17,17 @@ use Rezzza\CommandBus\Infra\Provider\Redis\RedisKeyGeneratorInterface;
 class SncRedisBus extends RedisBus
 {
     /**
-     * @param object                     $client       client
-     * @param RedisKeyGeneratorInterface $keyGenerator keyGenerator
-     * @param LoggerInterface            $logger       logger
+     * @param object                     $client          client
+     * @param RedisKeyGeneratorInterface $keyGenerator    keyGenerator
+     * @param EventDispatcherInterface   $eventDispatcher eventDispatcher
+     * @param LoggerInterface            $logger          logger
      */
-    public function __construct($client, RedisKeyGeneratorInterface $keyGenerator, LoggerInterface $logger = null)
+    public function __construct($client, RedisKeyGeneratorInterface $keyGenerator, EventDispatcherInterface $eventDispatcher, LoggerInterface $logger = null)
     {
-        $this->client       = $client;
-        $this->keyGenerator = $keyGenerator;
-        $this->logger       = $logger;
+        $this->client          = $client;
+        $this->keyGenerator    = $keyGenerator;
+        $this->eventDispatcher = $eventDispatcher;
+        $this->logger          = $logger;
     }
 
 }
