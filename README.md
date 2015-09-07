@@ -97,6 +97,7 @@ Options available:
  --iteration-limit (-i) Limit of iterations, -1 for infinite.. (default: -1)
  --time-limit           During how many time this command will listen to the queue. (default: 60)
  --usleep               Micro seconds (default: 100000)
+ --lock                 Only one command processing ?
 ```
 
 
