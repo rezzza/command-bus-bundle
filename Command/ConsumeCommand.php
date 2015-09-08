@@ -75,7 +75,7 @@ class ConsumeCommand extends Command
         $consumer = $this->container->get(sprintf('rezzza_command_bus.command_bus.consumer.%s', $input->getOption('consumer')));
 
         do {
-            if (false === $lock->lock()) {
+            if ($lock && false === $lock->lock()) {
                 $this->writeDependVerbosity('L', 'Locked');
                 usleep($usleep);
                 continue;
