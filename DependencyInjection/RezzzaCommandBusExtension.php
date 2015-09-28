@@ -2,6 +2,7 @@
 
 namespace Rezzza\CommandBusBundle\DependencyInjection;
 
+use Rezzza\CommandBus\Domain\CommandBusInterface;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -103,6 +104,7 @@ class RezzzaCommandBusExtension extends Extension
                     new Reference($this->getCommandBusServiceName($config['bus'])),
                     $config['attempts'],
                     $config['requeue_on_fail'],
+                    $this->getPriorityValue($config['priority']),
                     $this->createLoggerReference()
                 ]);
                 $container->setDefinition($this->getFailStrategyServiceName($name), $definition);
@@ -110,6 +112,7 @@ class RezzzaCommandBusExtension extends Extension
             case 'requeue':
                 $definition = new Definition('%rezzza_command_bus.fail_strategy.requeue.class%', [
                     new Reference($this->getCommandBusServiceName($config['bus'])),
+                    $this->getPriorityValue($config['priority']),
                     $this->createLoggerReference()
                 ]);
                 $container->setDefinition($this->getFailStrategyServiceName($name), $definition);
@@ -164,6 +167,18 @@ class RezzzaCommandBusExtension extends Extension
     private function getFailStrategyServiceName($failStrategy)
     {
         return sprintf('rezzza_command_bus.fail_strategy.%s', $failStrategy);
+    }
+
+    private function getPriorityValue($priority)
+    {
+        switch ($priority) {
+            case Configuration::PRIORITY_HIGH:
+                return CommandBusInterface::PRIORITY_HIGH;
+            break;
+            default:
+                return CommandBusInterface::PRIORITY_LOW;
+            break;
+        }
     }
 
     private function createRedisKeyGeneratorReference($service)

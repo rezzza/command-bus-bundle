@@ -13,6 +13,9 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  */
 class Configuration implements ConfigurationInterface
 {
+    CONST PRIORITY_HIGH = 'high';
+    CONST PRIORITY_LOW  = 'low';
+
     /**
      * Generates the configuration tree builder.
      *
@@ -98,12 +101,18 @@ class Configuration implements ConfigurationInterface
                             return ['id' => $v];
                         })
                     ->end()
+                    ->useAttributeAsKey('name')
                     ->prototype('array')
                         ->children()
                             ->scalarNode('id')->isRequired()->end()
                             ->scalarNode('bus')->end()
                             ->scalarNode('attempts')->defaultValue(100)->end()
                             ->booleanNode('requeue_on_fail')->defaultTrue()->end()
+                            ->enumNode('priority')
+                                ->values([self::PRIORITY_HIGH, self::PRIORITY_LOW])
+                                ->info('Strategy will act in TOP or BOTTOM of the queue ?')
+                                ->defaultValue(self::PRIORITY_LOW)
+                            ->end()
                         ->end()
                     ->end()
                 ->end()
