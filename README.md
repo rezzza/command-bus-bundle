@@ -37,7 +37,7 @@ Usage
 
 ```php
 
-$bus = $container->get('rezzza_command_bus.command_bus.direct'); // direct is the name you given to your bus in configuration.
+$bus = $container->get('rezzza_command_bus.command_bus.synchronous'); // synchronous is the name you given to your bus in configuration.
 $bus->handle(new FooCommand());
 ```
 
@@ -107,22 +107,20 @@ Configuration
 ```yaml
 rezzza_command_bus:
     buses:
-      direct: direct
-      redis:
-          id:     snc_redis
-          client: default # snc redis client.
-    consumers:
-        default:
-            provider:      redis
-            bus:           direct
-            fail_strategy: retry_then_fail # When the command fail, it uses this strategy.
+      synchronous: direct
+      asynchronous:
+        snc_redis:
+            client: default # snc redis client.
+            read_block_timeout: 1 # see blpop documentation
+            consumers:
+                default:
+                    bus: synchronous
+                    fail_strategy:
+                        retry_then_fail: # When the command fail, it uses this strategy.
+                        # you could use too requeue, none, service.
+                            attempts: 10
+                            requeue_on_fail: true
     handlers: # Do you want to use handlers provided in this bundle ?
-        retry: direct # If you used retry_then_fail strategy, this handler is linked to Retry commands.
-        failed: direct # If you used retry_then_fail strategy, this handler is linked to Failed commands.
-    fail_strategies:
-        retry_then_fail:
-            id: retry_then_fail # or requeue|none|your own
-            bus: redis
-            attempts: 10
-            requeue_on_fail: true
+        retry:  synchronous  # If you used retry_then_fail strategy, this handler is linked to Retry commands.
+        failed: synchronous # If you used retry_then_fail strategy, this handler is linked to Failed commands.
 ```

@@ -26,14 +26,6 @@ class RezzzaCommandBusExtension extends Extension
             $this->createBus($name, $busConfig, $container);
         }
 
-        foreach ($config['consumers'] as $name => $consumerConfig) {
-            $this->createConsumer($name, $consumerConfig, $container);
-        }
-
-        foreach ($config['fail_strategies'] as $name => $failStrategyConfig) {
-            $this->createFailStrategy($name, $failStrategyConfig, $container);
-        }
-
         if (isset($config['handlers'])) {
             $this->loadHandlers($config['handlers'], $container);
         }
@@ -44,51 +36,62 @@ class RezzzaCommandBusExtension extends Extension
 
     private function createBus($name, array $config, ContainerBuilder $container)
     {
-        switch ($config['id']) {
+        $providerName          = current(array_keys($config));
+        $commandBusServiceName = $this->getCommandBusServiceName($name);
+        $config                = current($config);
+
+        switch ($providerName) {
             case 'direct':
                 $service = new Definition('%rezzza_command_bus.direct_bus.class%', [
                     new Reference('rezzza_command_bus.command_handler_locator.container'),
                         new Reference('rezzza_command_bus.event_dispatcher'),
                     $this->createLoggerReference()
                 ]);
-                $container->setDefinition($this->getCommandBusServiceName($name), $service);
+                $container->setDefinition($commandBusServiceName, $service);
                 break;
             case 'snc_redis':
-                $service = new Definition('%rezzza_command_bus.snc_redis_bus.class%', [
-                    new Reference(sprintf('snc_redis.%s_client', $config['client'])),
-                    $this->createRedisKeyGeneratorReference($config['key_generator']),
-                    new Reference('rezzza_command_bus.event_dispatcher'),
-                    $this->createLoggerReference()
-                ]);
-                $service->setLazy(true);
-                // because snc redis will initiate connection, and we may not want it.
-                $container->setDefinition($this->getCommandBusServiceName($name), $service);
+                $this->createSncRedisBusCommandBus($commandBusServiceName, $config, $container);
+                break;
+            case 'service':
+                $container->setAlias($commandBusServiceName, $config['id']);
                 break;
             default:
-                $container->setAlias($this->getCommandBusServiceName($name), $config['id']);
+                throw new \LogicException(sprintf('Unknown command bus provider "%s"', $providerName));
                 break;
         }
     }
 
-    private function createConsumer($name, array $config, ContainerBuilder $container)
+    private function createSncRedisBusCommandBus($commandBusServiceName, $config, ContainerBuilder $container)
     {
-        switch ($config['provider']['id']) {
-            case 'snc_redis':
-                $provider = new Definition('%rezzza_command_bus.snc_redis_provider.class%', [
-                    new Reference(sprintf('snc_redis.%s_client', $config['provider']['client'])),
-                    $this->createRedisKeyGeneratorReference($config['provider']['key_generator'])
-                ]);
-                break;
-            default:
-                $provider = new Reference($config['provider']['id']);
-                break;
-        }
+        $service = new Definition('%rezzza_command_bus.snc_redis_bus.class%', [
+            new Reference(sprintf('snc_redis.%s_client', $config['client'])),
+            $this->createRedisKeyGeneratorReference($config['key_generator']),
+            new Reference('rezzza_command_bus.event_dispatcher'),
+            $this->createLoggerReference()
+        ]);
+        $service->setLazy(true);
+        // because snc redis will initiate connection, and we may not want it.
+        $container->setDefinition($commandBusServiceName, $service);
 
+        $consumerProvider = new Definition('%rezzza_command_bus.snc_redis_provider.class%', [
+            new Reference(sprintf('snc_redis.%s_client', $config['client'])),
+            $this->createRedisKeyGeneratorReference($config['key_generator']),
+            $config['read_block_timeout']
+        ]);
+
+        foreach ($config['consumers'] as $consumerName => $consumerConfig) {
+            $this->createConsumerDefinition($consumerName, $consumerProvider, $consumerConfig, $commandBusServiceName, $container);
+
+        }
+    }
+
+    private function createConsumerDefinition($name, Definition $provider, array $config, $commandBusServiceName, ContainerBuilder $container)
+    {
         $consumerDefinition = new Definition('%rezzza_command_bus.consumer.class%',
             [
                 $provider,
                 new Reference($this->getCommandBusServiceName($config['bus'])),
-                new Reference($this->getFailStrategyServiceName($config['fail_strategy'])),
+                $this->createFailStrategyDefinition($config['fail_strategy'], $commandBusServiceName),
                 new Reference('rezzza_command_bus.event_dispatcher')
             ]
         );
@@ -96,41 +99,44 @@ class RezzzaCommandBusExtension extends Extension
         $container->setDefinition(sprintf('rezzza_command_bus.command_bus.consumer.%s', $name), $consumerDefinition);
     }
 
-    private function createFailStrategy($name, array $config, ContainerBuilder $container)
+    private function createFailStrategyDefinition(array $config, $commandBusServiceName)
     {
-        switch ($config['id']) {
+        $name   = current(array_keys($config));
+        $config = current($config);
+
+        switch ($name) {
             case 'retry_then_fail':
-                $definition = new Definition('%rezzza_command_bus.fail_strategy.retry_then_fail.class%', [
-                    new Reference($this->getCommandBusServiceName($config['bus'])),
+                return new Definition('%rezzza_command_bus.fail_strategy.retry_then_fail.class%', [
+                    new Reference($commandBusServiceName),
                     $config['attempts'],
                     $config['requeue_on_fail'],
                     $this->getPriorityValue($config['priority']),
                     $this->createLoggerReference()
                 ]);
-                $container->setDefinition($this->getFailStrategyServiceName($name), $definition);
+
                 break;
             case 'requeue':
-                $definition = new Definition('%rezzza_command_bus.fail_strategy.requeue.class%', [
-                    new Reference($this->getCommandBusServiceName($config['bus'])),
+                return new Definition('%rezzza_command_bus.fail_strategy.requeue.class%', [
+                    new Reference($commandBusServiceName),
                     $this->getPriorityValue($config['priority']),
                     $this->createLoggerReference()
                 ]);
-                $container->setDefinition($this->getFailStrategyServiceName($name), $definition);
                 break;
             case 'none':
-                $definition = new Definition('%rezzza_command_bus.fail_strategy.none.class%', [
+                return new Definition('%rezzza_command_bus.fail_strategy.none.class%', [
                     $this->createLoggerReference()
                 ]);
-                $container->setDefinition($this->getFailStrategyServiceName($name), $definition);
+                break;
+            case 'service':
+                return new Reference($config['id']);
                 break;
             default:
-                $container->setAlias($this->getFailStrategyServiceName($name), $config['id']);
+                throw new \LogicException(sprintf('Unknown fail strategy "%s"', $failStrategyName));
                 break;
         }
-
     }
 
-    public function loadHandlers(array $handlers, ContainerBuilder $container)
+    private function loadHandlers(array $handlers, ContainerBuilder $container)
     {
         if (isset($handlers['retry'])) {
             $config = $handlers['retry'];
@@ -162,11 +168,6 @@ class RezzzaCommandBusExtension extends Extension
     private function getCommandBusServiceName($commandBus)
     {
         return sprintf('rezzza_command_bus.command_bus.%s', $commandBus);
-    }
-
-    private function getFailStrategyServiceName($failStrategy)
-    {
-        return sprintf('rezzza_command_bus.fail_strategy.%s', $failStrategy);
     }
 
     private function getPriorityValue($priority)
