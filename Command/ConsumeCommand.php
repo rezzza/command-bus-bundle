@@ -33,7 +33,7 @@ class ConsumeCommand extends Command
         $this
             ->setName('rezzza:command_bus:consume')
             ->setDescription('Consume a command bus')
-            ->addArgument('command_class', InputArgument::REQUIRED, 'Command to consume.')
+            ->addArgument('command_class', InputArgument::OPTIONAL, 'Command to consume.')
             ->addOption('consumer', null, InputOption::VALUE_REQUIRED, 'Which consumer should we use ?', 'default')
             ->addOption('iteration-limit', 'i', InputOption::VALUE_REQUIRED, 'Limit of iterations, -1 for infinite..', -1)
             ->addOption('time-limit', null, InputOption::VALUE_REQUIRED, 'During how many time this command will listen to the queue.', 60)
