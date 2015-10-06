@@ -2,6 +2,8 @@
 
 namespace Rezzza\CommandBusBundle\DependencyInjection;
 
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\EnumNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
@@ -25,26 +27,6 @@ class Configuration implements ConfigurationInterface
     {
         $tb = new TreeBuilder();
         $tb->root('rezzza_command_bus')
-            ->beforeNormalization()
-                ->always(function($v) {
-                    if (false === isset($v['consumers'])) {
-                        return $v;
-                    }
-
-                    foreach ($v['consumers'] as $k => $consumer) {
-                        if (is_scalar($consumer['provider'])) {
-                            $provider = $consumer['provider'];
-                            if (false === array_key_exists($provider, $v['buses'])) {
-                                throw new \InvalidArgumentException(sprintf('Provider “%s“ unknown', $provider));
-                            }
-
-                            $v['consumers'][$k]['provider'] = $v['buses'][$provider];
-                        }
-                    }
-
-                    return $v;
-                })
-            ->end()
             ->children()
                 ->arrayNode('buses')
                     ->cannotBeEmpty()
@@ -52,99 +34,101 @@ class Configuration implements ConfigurationInterface
                     ->prototype('array')
                         ->beforeNormalization()
                             ->ifTrue(function($v) { return is_scalar($v); })
-                            ->then(function($v) { return ['id' => $v]; })
+                            ->then(function($v) { return [$v => []]; })
                         ->end()
                         ->validate()
-                            ->ifTrue(function($v) {
-                                return $v['id'] === 'snc_redis' && false === isset($v['client']);
-                            })
-                            ->thenInvalid('“snc_redis“ bus needs a client. See documentation.')
+                            ->ifTrue(function($v) { return count($v) > 1; })
+                            ->thenInvalid("You can't have more than bus provider defined.")
                         ->end()
                         ->children()
-                            ->scalarNode('id')->isRequired()->end()
-                            ->scalarNode('key_generator')->defaultNull()->end()
-                            ->scalarNode('client')->end()
-                        ->end()
-                    ->end()
-                ->end()
-                ->arrayNode('consumers')
-                    ->cannotBeEmpty()
-                    ->useAttributeAsKey('name')
-                    ->prototype('array')
-                        ->children()
-                            ->arrayNode('provider')
-                                ->beforeNormalization()
-                                    ->ifTrue(function($v) { return is_scalar($v); })
-                                        ->then(function($v) { return ['id' => $v]; })
-                                    ->end()
-                                    ->validate()
-                                        ->ifTrue(function($v) {
-                                            return $v['id'] === 'snc_redis' && false === isset($v['client']);
-                                        })
-                                    ->thenInvalid('“snc_redis“ bus needs a client. See documentation.')
-                                ->end()
+                            ->arrayNode('direct')->end()
+                            ->arrayNode('snc_redis')
                                 ->children()
-                                    ->scalarNode('id')->isRequired()->end()
+                                    ->scalarNode('client')->isRequired()->end()
+                                    ->integerNode('read_block_timeout')->info('Wait x second to read in storage, see BLPOP documentation.')->defaultValue(1)->end()
                                     ->scalarNode('key_generator')->defaultNull()->end()
-                                    ->scalarNode('client')->end()
+                                    ->append($this->createConsumersNodeDefinition())
                                 ->end()
                             ->end()
-                            ->scalarNode('bus')->isRequired()->end()
-                            ->scalarNode('fail_strategy')->end()
-                        ->end()
-                    ->end()
-                ->end()
-                ->arrayNode('fail_strategies')
-                    ->beforeNormalization()
-                        ->ifTrue(function($v) { return is_scalar($v); })
-                        ->then(function($v) {
-                            return ['id' => $v];
-                        })
-                    ->end()
-                    ->useAttributeAsKey('name')
-                    ->prototype('array')
-                        ->children()
-                            ->scalarNode('id')->isRequired()->end()
-                            ->scalarNode('bus')->end()
-                            ->scalarNode('attempts')->defaultValue(100)->end()
-                            ->booleanNode('requeue_on_fail')->defaultTrue()->end()
-                            ->enumNode('priority')
-                                ->values([self::PRIORITY_HIGH, self::PRIORITY_LOW])
-                                ->info('Strategy will act in TOP or BOTTOM of the queue ?')
-                                ->defaultValue(self::PRIORITY_LOW)
+                            ->arrayNode('service')
+                                ->children()
+                                    ->scalarNode('id')->isRequired()->end()
+                                ->end()
                             ->end()
                         ->end()
                     ->end()
                 ->end()
                 ->arrayNode('handlers')
                     ->children()
-                        ->arrayNode('retry')
-                            ->beforeNormalization()
-                                ->ifTrue(function($v) { return is_scalar($v); })
-                                ->then(function($v) {
-                                    return ['direct_bus' => $v];
-                                })
-                            ->end()
-                            ->children()
-                                ->scalarNode('direct_bus')->isRequired()->end()
-                            ->end()
+                        ->append($this->createHandlerNodeDefinition('retry'))
+                        ->append($this->createHandlerNodeDefinition('failed'))
+                    ->end()
+                ->end()
+            ->end();
+
+        return $tb;
+    }
+
+    private function createConsumersNodeDefinition()
+    {
+        return (new ArrayNodeDefinition('consumers'))
+            ->cannotBeEmpty()
+            ->useAttributeAsKey('name')
+            ->prototype('array')
+                ->children()
+                    ->scalarNode('bus')->isRequired()->end()
+                    ->arrayNode('fail_strategy')
+                        ->validate()
+                            ->ifTrue(function($v) { return count($v) > 1; })
+                            ->thenInvalid("You can't have more than one fail strategy defined.")
                         ->end()
-                        ->arrayNode('failed')
-                            ->beforeNormalization()
-                                ->ifTrue(function($v) { return is_scalar($v); })
-                                ->then(function($v) {
-                                    return ['direct_bus' => $v];
-                                })
+                        ->isRequired()
+                        ->children()
+                            ->arrayNode('retry_then_fail')
+                                ->children()
+                                    ->scalarNode('bus')->end()
+                                    ->scalarNode('attempts')->defaultValue(100)->end()
+                                    ->booleanNode('requeue_on_fail')->defaultTrue()->end()
+                                    ->append($this->createPriorityNodeDefinition())
+                                ->end()
                             ->end()
-                            ->children()
-                                ->scalarNode('direct_bus')->isRequired()->end()
+                            ->arrayNode('requeue')
+                                ->children()
+                                    ->scalarNode('bus')->end()
+                                    ->append($this->createPriorityNodeDefinition())
+                                ->end()
+                            ->end()
+                            ->arrayNode('none')->end()
+                            ->arrayNode('service')
+                                ->children()
+                                    ->scalarNode('id')->isRequired()->end()
+                                ->end()
                             ->end()
                         ->end()
                     ->end()
                 ->end()
-            ->end()
-        ->end();
+            ->end();
+    }
 
-        return $tb;
+    private function createHandlerNodeDefinition($name)
+    {
+        return (new ArrayNodeDefinition($name))
+            ->beforeNormalization()
+                ->ifTrue(function($v) { return is_scalar($v); })
+                ->then(function($v) {
+                    return ['direct_bus' => $v];
+                })
+            ->end()
+            ->children()
+                ->scalarNode('direct_bus')->isRequired()->end()
+            ->end();
+    }
+
+    private function createPriorityNodeDefinition()
+    {
+        return (new EnumNodeDefinition('priority'))
+            ->values([self::PRIORITY_HIGH, self::PRIORITY_LOW])
+            ->info('Strategy will act in TOP or BOTTOM of the queue ?')
+            ->defaultValue(self::PRIORITY_LOW);
     }
 }

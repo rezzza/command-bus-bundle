@@ -14,11 +14,14 @@ use Rezzza\CommandBus\Infra\Provider\Redis\RedisKeyGeneratorInterface;
 class SncRedisConsumerProvider extends RedisConsumerProvider
 {
     /**
-     * @param object $client client
+     * @param object                     $client           client
+     * @param RedisKeyGeneratorInterface $keyGenerator     keyGenerator
+     * @param int                        $readBlockTimeout readBlockTimeout
      */
-    public function __construct($client, RedisKeyGeneratorInterface $keyGenerator)
+    public function __construct($client, RedisKeyGeneratorInterface $keyGenerator, $readBlockTimeout = 0)
     {
-        $this->client       = $client;
-        $this->keyGenerator = $keyGenerator;
+        $this->client        = $client;
+        $this->keyGenerator  = $keyGenerator;
+        $this->readBlockTimeout = $readBlockTimeout;
     }
 }
