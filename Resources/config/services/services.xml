@@ -10,6 +10,10 @@
 
         <parameter key="rezzza_command_bus.snc_redis_provider.class">Rezzza\CommandBusBundle\Provider\SncRedis\SncRedisConsumerProvider</parameter>
 
+        <parameter key="rezzza_command_bus.redis_key_generator.class">Rezzza\CommandBus\Infra\Provider\Redis\RedisKeyGenerator</parameter>
+
+        <parameter key="rezzza_command_bus.command_serializer.class">Rezzza\CommandBus\Infra\Serializer\NativeSerializer</parameter>
+
         <parameter key="rezzza_command_bus.consumer.class">Rezzza\CommandBus\Domain\Consumer\Consumer</parameter>
 
         <parameter key="rezzza_command_bus.fail_strategy.retry_then_fail.class">Rezzza\CommandBus\Domain\Consumer\FailStrategy\RetryThenFailStrategy</parameter>
@@ -34,10 +38,13 @@
             <tag name="console.command" />
         </service>
 
+        <service id="rezzza_command_bus.command_serializer" class="%rezzza_command_bus.command_serializer.class%" />
+
         <service id="rezzza_command_bus.event_dispatcher" class="Symfony\Component\EventDispatcher\ContainerAwareEventDispatcher">
             <argument type="service" id="service_container" />
         </service>
 
+        <service id="rezzza_command_bus.redis_key_generator" class="%rezzza_command_bus.redis_key_generator.class%" />
 
     </services>
 </container>
