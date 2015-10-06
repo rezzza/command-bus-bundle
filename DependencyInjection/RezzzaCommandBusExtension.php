@@ -63,9 +63,14 @@ class RezzzaCommandBusExtension extends Extension
 
     private function createSncRedisBusCommandBus($commandBusServiceName, $config, ContainerBuilder $container)
     {
+        $client       = new Reference(sprintf('snc_redis.%s_client', $config['client']));
+        $serializer   = new Reference($config['serializer']);
+        $keyGenerator = new Reference($config['key_generator']);
+
         $service = new Definition('%rezzza_command_bus.snc_redis_bus.class%', [
-            new Reference(sprintf('snc_redis.%s_client', $config['client'])),
-            $this->createRedisKeyGeneratorReference($config['key_generator']),
+            $client,
+            $keyGenerator,
+            $serializer,
             new Reference('rezzza_command_bus.event_dispatcher'),
             $this->createLoggerReference()
         ]);
@@ -73,23 +78,24 @@ class RezzzaCommandBusExtension extends Extension
         // because snc redis will initiate connection, and we may not want it.
         $container->setDefinition($commandBusServiceName, $service);
 
-        $consumerProvider = new Definition('%rezzza_command_bus.snc_redis_provider.class%', [
-            new Reference(sprintf('snc_redis.%s_client', $config['client'])),
-            $this->createRedisKeyGeneratorReference($config['key_generator']),
+        $defaultConsumerProvider = new Definition('%rezzza_command_bus.snc_redis_provider.class%', [
+            $client,
+            $keyGenerator,
+            $serializer,
             $config['read_block_timeout']
         ]);
 
         foreach ($config['consumers'] as $consumerName => $consumerConfig) {
-            $this->createConsumerDefinition($consumerName, $consumerProvider, $consumerConfig, $commandBusServiceName, $container);
+            $this->createConsumerDefinition($consumerName, $defaultConsumerProvider, $consumerConfig, $commandBusServiceName, $container);
 
         }
     }
 
-    private function createConsumerDefinition($name, Definition $provider, array $config, $commandBusServiceName, ContainerBuilder $container)
+    private function createConsumerDefinition($name, Definition $defaultProvider, array $config, $commandBusServiceName, ContainerBuilder $container)
     {
         $consumerDefinition = new Definition('%rezzza_command_bus.consumer.class%',
             [
-                $provider,
+                $config['provider'] !== null ? new Reference($config['provider']) : $defaultProvider,
                 new Reference($this->getCommandBusServiceName($config['bus'])),
                 $this->createFailStrategyDefinition($config['fail_strategy'], $commandBusServiceName),
                 new Reference('rezzza_command_bus.event_dispatcher')
@@ -180,15 +186,6 @@ class RezzzaCommandBusExtension extends Extension
                 return CommandBusInterface::PRIORITY_LOW;
             break;
         }
-    }
-
-    private function createRedisKeyGeneratorReference($service)
-    {
-        if (empty($service)) {
-            return new Definition('Rezzza\CommandBus\Infra\Provider\Redis\RedisKeyGenerator');
-        }
-
-        return new Reference($service);
     }
 
     private function createLoggerReference()
