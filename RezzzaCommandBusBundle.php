@@ -4,8 +4,8 @@ namespace Rezzza\CommandBusBundle;
 
 use Rezzza\CommandBusBundle\DependencyInjection\Compiler;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\EventDispatcher\DependencyInjection\RegisterListenersPass;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
-use Symfony\Component\HttpKernel\DependencyInjection\RegisterListenersPass;
 
 class RezzzaCommandBusBundle extends Bundle
 {
