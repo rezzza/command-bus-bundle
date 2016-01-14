@@ -7,6 +7,8 @@
     <parameters>
         <parameter key="rezzza_command_bus.direct_bus.class">Rezzza\CommandBus\Infra\Provider\Direct\DirectBus</parameter>
         <parameter key="rezzza_command_bus.snc_redis_bus.class">Rezzza\CommandBusBundle\Provider\SncRedis\SncRedisBus</parameter>
+        <parameter key="rezzza_command_bus.event_dispatcher_bus.class">Rezzza\CommandBus\Domain\EventDispatcherBus</parameter>
+        <parameter key="rezzza_command_bus.logger_bus.class">Rezzza\CommandBus\Domain\LoggerBus</parameter>
 
         <parameter key="rezzza_command_bus.snc_redis_provider.class">Rezzza\CommandBusBundle\Provider\SncRedis\SncRedisConsumerProvider</parameter>
 
@@ -21,6 +23,7 @@
         <parameter key="rezzza_command_bus.fail_strategy.none.class">Rezzza\CommandBus\Domain\Consumer\FailStrategy\NoneStrategy</parameter>
 
         <parameter key="rezzza_command_bus.command_handler_locator.container.class">Rezzza\CommandBusBundle\Handler\ContainerCommandHandlerLocator</parameter>
+        <parameter key="rezzza_command_bus.command_handler.method_resolver.class">Rezzza\CommandBus\Domain\Handler\MethodResolver\ClassNameAsMethodWithoutSuffix</parameter>
 
         <parameter key="rezzza_command_bus.consumer.command.class">Rezzza\CommandBusBundle\Command\ConsumeCommand</parameter>
 
@@ -32,6 +35,8 @@
         <service id="rezzza_command_bus.command_handler_locator.container" class="%rezzza_command_bus.command_handler_locator.container.class%" public="false">
             <argument type="service" id="service_container" />
         </service>
+
+        <service id="rezzza_command_bus.command_handler.method_resolver" class="%rezzza_command_bus.command_handler.method_resolver.class%" public="false" />
 
         <service id="rezzza_command_bus.consumer.command" class="%rezzza_command_bus.consumer.command.class%">
             <argument type="service" id="service_container" />
