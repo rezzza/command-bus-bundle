@@ -44,13 +44,14 @@ class RezzzaCommandBusExtension extends Extension
             case 'direct':
                 $service = new Definition('%rezzza_command_bus.direct_bus.class%', [
                     new Reference('rezzza_command_bus.command_handler_locator.container'),
-                        new Reference('rezzza_command_bus.event_dispatcher'),
-                    $this->createLoggerReference()
+                    new Reference('rezzza_command_bus.command_handler.method_resolver')
                 ]);
                 $container->setDefinition($commandBusServiceName, $service);
+                $this->decorateBus($commandBusServiceName, $container);
                 break;
             case 'snc_redis':
                 $this->createSncRedisBusCommandBus($commandBusServiceName, $config, $container);
+                $this->decorateBus($commandBusServiceName, $container);
                 break;
             case 'service':
                 $container->setAlias($commandBusServiceName, $config['id']);
@@ -71,8 +72,6 @@ class RezzzaCommandBusExtension extends Extension
             $client,
             $keyGenerator,
             $serializer,
-            new Reference('rezzza_command_bus.event_dispatcher'),
-            $this->createLoggerReference()
         ]);
         $service->setLazy(true);
         // because snc redis will initiate connection, and we may not want it.
@@ -87,7 +86,6 @@ class RezzzaCommandBusExtension extends Extension
 
         foreach ($config['consumers'] as $consumerName => $consumerConfig) {
             $this->createConsumerDefinition($consumerName, $defaultConsumerProvider, $consumerConfig, $commandBusServiceName, $container);
-
         }
     }
 
@@ -169,6 +167,24 @@ class RezzzaCommandBusExtension extends Extension
 
             $container->setDefinition('rezzza_command_bus.command_handler.failed', $definition);
         }
+    }
+
+    private function decorateBus($busServiceId, ContainerBuilder $container)
+    {
+        $originalBusServiceId = $busServiceId.'.original';
+        $container
+            ->register($busServiceId.'.with_event_dispatcher', '%rezzza_command_bus.event_dispatcher_bus.class%')
+            ->addArgument(new Reference('rezzza_command_bus.event_dispatcher'))
+            ->addArgument(new Reference($originalBusServiceId))
+            ->setDecoratedService($busServiceId, $originalBusServiceId);
+        ;
+
+        $container
+            ->register($busServiceId.'.with_logger', '%rezzza_command_bus.logger_bus.class%')
+            ->addArgument(new Reference('logger'))
+            ->addArgument(new Reference($busServiceId.'.with_event_dispatcher'))
+            ->setDecoratedService($busServiceId);
+        ;
     }
 
     private function getCommandBusServiceName($commandBus)
