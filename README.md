@@ -14,7 +14,7 @@ to your `composer.json` file:
 ```json
 {
     "require": {
-        "rezzza/command-bus-bundle": "1.*@dev"
+        "rezzza/command-bus-bundle": "~2.0"
     }
 }
 ```
