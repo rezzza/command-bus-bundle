@@ -100,6 +100,16 @@ Options available:
  --lock                 Only one command processing ?
 ```
 
+To watch activity of your consumer, you should register a console handler for monolog
+
+```yaml
+monolog:
+    handlers:
+        console:
+            type:   console
+            verbosity_levels:
+                VERBOSITY_NORMAL: NOTICE
+```
 
 Configuration
 -------------
