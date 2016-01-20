@@ -84,27 +84,10 @@ class ConsumeCommand extends Command
             $response = $consumer->consume($commandClass);
 
             if ($response) {
-                if ($response->isSuccess()) {
-                    $this->writeDependVerbosity('<info>S</info>', '<info>Success</info>');
-                } else {
-                    $this->writeDependVerbosity('<error>F</error>', sprintf('<error>Failed</error>: %s', $response->getError()->getMessage()));
-                }
                 $iteration++;
-            } else {
-                $output->write('.');
             }
 
             usleep($usleep);
         } while ($isLive());
-    }
-
-    private function writeDependVerbosity($notVerboseMessage, $verboseMessage)
-    {
-        if ($this->verbose) {
-            $this->output->writeln($verboseMessage);
-            return;
-        }
-
-        $this->output->write($notVerboseMessage);
     }
 }
