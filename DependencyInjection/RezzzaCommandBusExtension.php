@@ -183,6 +183,7 @@ class RezzzaCommandBusExtension extends Extension
             ->register($busServiceId.'.with_logger', '%rezzza_command_bus.logger_bus.class%')
             ->addArgument(new Reference('logger'))
             ->addArgument(new Reference($busServiceId.'.with_event_dispatcher'))
+            ->addArgument(new Reference('rezzza_command_bus.command_serializer'))
             ->setDecoratedService($busServiceId);
         ;
     }
