@@ -32,6 +32,13 @@ public function registerBundles()
 }
 ```
 
+Update your `config.yml`:
+```yaml
+framework:
+    serializer:
+        enabled: true
+```
+
 Usage
 -----
 
