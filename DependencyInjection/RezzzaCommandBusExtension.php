@@ -23,7 +23,7 @@ class RezzzaCommandBusExtension extends Extension
         $config    = $processor->processConfiguration(new Configuration(), $configs);
 
         foreach ($config['buses'] as $name => $busConfig) {
-            $this->createBus($name, $busConfig, $container);
+            $this->createBus($name, $busConfig, $container, $config['logger_normalizer']);
         }
 
         if (isset($config['handlers'])) {
@@ -34,7 +34,7 @@ class RezzzaCommandBusExtension extends Extension
         $loader->load('services.xml');
     }
 
-    private function createBus($name, array $config, ContainerBuilder $container)
+    private function createBus($name, array $config, ContainerBuilder $container, $loggerNormalizer)
     {
         $providerName          = current(array_keys($config));
         $commandBusServiceName = $this->getCommandBusServiceName($name);
@@ -47,11 +47,11 @@ class RezzzaCommandBusExtension extends Extension
                     new Reference('rezzza_command_bus.command_handler.method_resolver')
                 ]);
                 $container->setDefinition($commandBusServiceName, $service);
-                $this->decorateBus($commandBusServiceName, $container);
+                $this->decorateBus($commandBusServiceName, $container, $loggerNormalizer);
                 break;
             case 'snc_redis':
                 $this->createSncRedisBusCommandBus($commandBusServiceName, $config, $container);
-                $this->decorateBus($commandBusServiceName, $container);
+                $this->decorateBus($commandBusServiceName, $container, $loggerNormalizer);
                 break;
             case 'service':
                 $container->setAlias($commandBusServiceName, $config['id']);
@@ -169,7 +169,7 @@ class RezzzaCommandBusExtension extends Extension
         }
     }
 
-    private function decorateBus($busServiceId, ContainerBuilder $container)
+    private function decorateBus($busServiceId, ContainerBuilder $container, $loggerNormalizer)
     {
         $originalBusServiceId = $busServiceId.'.original';
         $container
@@ -183,7 +183,7 @@ class RezzzaCommandBusExtension extends Extension
             ->register($busServiceId.'.with_logger', '%rezzza_command_bus.logger_bus.class%')
             ->addArgument(new Reference('logger'))
             ->addArgument(new Reference($busServiceId.'.with_event_dispatcher'))
-            ->addArgument(new Reference('serializer'))
+            ->addArgument(new Reference($loggerNormalizer))
             ->setDecoratedService($busServiceId);
         ;
     }

@@ -65,6 +65,9 @@ class Configuration implements ConfigurationInterface
                         ->append($this->createHandlerNodeDefinition('failed'))
                     ->end()
                 ->end()
+                ->scalarNode('logger_normalizer')
+                    ->defaultValue('serializer')
+                ->end()
             ->end();
 
         return $tb;
