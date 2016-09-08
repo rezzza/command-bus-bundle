@@ -141,3 +141,16 @@ rezzza_command_bus:
         retry:  synchronous  # If you used retry_then_fail strategy, this handler is linked to Retry commands.
         failed: synchronous # If you used retry_then_fail strategy, this handler is linked to Failed commands.
 ```
+
+Usage with JMS Serializer
+-------------
+
+```yaml
+rezzza_command_bus:
+    logger_normalizer: symfony_serializer
+
+services:
+    symfony_serializer:
+        class: "Symfony\Component\Serializer\Serializer"
+```
+
