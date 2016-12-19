@@ -51,7 +51,7 @@ $bus->handle(new FooCommand());
 Bus
 ---
 
-Direct & SncRedis are currently supported.
+Direct, SncRedis & OldSoundRabbit are currently supported.
 
 Commands
 --------
@@ -126,6 +126,14 @@ rezzza_command_bus:
     buses:
       synchronous: direct
       asynchronous:
+        old_rabbitmq:
+          #define producer_guesser which allow to determine rigth producer for each command
+          #producer name and command class name must be indentical 
+            #example:
+            #producer name : source_entry_update
+            #command class name : SourceEntryUpdateCommand
+          producer_guesser: rezzza_command_bus.old_sound_rabbit.producer_guesser 
+          consumer_bus: synchronous #consumer handle command with synchronous bus
         snc_redis:
             client: default # snc redis client.
             read_block_timeout: 1 # see blpop documentation

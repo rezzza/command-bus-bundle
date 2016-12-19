@@ -53,12 +53,35 @@ class RezzzaCommandBusExtension extends Extension
                 $this->createSncRedisBusCommandBus($commandBusServiceName, $config, $container);
                 $this->decorateBus($commandBusServiceName, $container, $loggerNormalizer);
                 break;
+            case 'rabbitmq':
+                $this->createRabbitMqBusCommandBus($commandBusServiceName, $config, $container);
+                $this->decorateBus($commandBusServiceName, $container, $loggerNormalizer);
+                break;
             case 'service':
                 $container->setAlias($commandBusServiceName, $config['id']);
                 break;
             default:
                 throw new \LogicException(sprintf('Unknown command bus provider "%s"', $providerName));
                 break;
+        }
+    }
+
+    private function createRabbitMqBusCommandBus($commandBusServiceName, $config, ContainerBuilder $container)
+    {
+        $service = new Definition('%rezzza_command_bus.old_sound_rabbit_bus.class%', [
+            new Reference($config['producer_guesser']),
+        ]);
+
+        $container->setDefinition($commandBusServiceName, $service);
+
+        if ($config['consumer_bus'] !== null) {
+            $consumerDefinition = new Definition('%rezzza_command_bus.old_sound_rabbit_bus.consumer.class%',
+                [
+                    new Reference($this->getCommandBusServiceName($config['consumer_bus'])),
+                ]
+            );
+
+            $container->setDefinition(sprintf('rezzza_command_bus.old_sound_rabbit_bus.consumer.%s', $config['consumer_bus']), $consumerDefinition);
         }
     }
 
