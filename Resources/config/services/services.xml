@@ -7,6 +7,11 @@
     <parameters>
         <parameter key="rezzza_command_bus.direct_bus.class">Rezzza\CommandBus\Infra\Provider\Direct\DirectBus</parameter>
         <parameter key="rezzza_command_bus.snc_redis_bus.class">Rezzza\CommandBusBundle\Provider\SncRedis\SncRedisBus</parameter>
+
+        <parameter key="rezzza_command_bus.old_sound_rabbit_bus.class">Rezzza\CommandBus\Infra\Provider\OldSoundRabbit\RabbitMqBus</parameter>
+        <parameter key="rezzza_command_bus.old_sound_rabbit_bus.consumer.class">Rezzza\CommandBusBundle\Provider\OldSoundRabbit\DefaultConsumer</parameter>
+        <parameter key="rezzza_command_bus.old_sound_rabbit.producer_guesser.class">Rezzza\CommandBus\Infra\Provider\OldSoundRabbit\ProducerGuesser</parameter>
+
         <parameter key="rezzza_command_bus.event_dispatcher_bus.class">Rezzza\CommandBus\Domain\EventDispatcherBus</parameter>
         <parameter key="rezzza_command_bus.logger_bus.class">Rezzza\CommandBus\Domain\LoggerBus</parameter>
 
@@ -32,6 +37,10 @@
     </parameters>
 
     <services>
+        <service id="rezzza_command_bus.old_sound_rabbit.producer_guesser" class="%rezzza_command_bus.old_sound_rabbit.producer_guesser.class%" public="false">
+            <argument type="service" id="service_container" />
+        </service>
+
         <service id="rezzza_command_bus.command_handler_locator.container" class="%rezzza_command_bus.command_handler_locator.container.class%" public="false">
             <argument type="service" id="service_container" />
         </service>
