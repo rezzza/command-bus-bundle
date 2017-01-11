@@ -75,7 +75,7 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('logger_normalizer')
                     ->defaultValue('serializer')
                 ->end()
-                ->array_node('logger_log_level')
+                ->arrayNode('logger_log_level')
                     ->children()
                         ->scalarNode('handle')->default(LogLevel::NOTICE)->end()
                         ->scalarNode('error')->default(LogLevel::ERROR)->end()
