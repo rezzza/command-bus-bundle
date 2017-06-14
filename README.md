@@ -126,13 +126,13 @@ rezzza_command_bus:
     buses:
       synchronous: direct
       asynchronous:
-        old_rabbitmq:
+        rabbitmq:
           #define producer_guesser which allow to determine rigth producer for each command
-          #producer name and command class name must be indentical 
+          #producer name and command class name must be indentical
             #example:
             #producer name : source_entry_update
             #command class name : SourceEntryUpdateCommand
-          producer_guesser: rezzza_command_bus.old_sound_rabbit.producer_guesser 
+          producer_guesser: rezzza_command_bus.old_sound_rabbit.producer_guesser
           consumer_bus: synchronous #consumer handle command with synchronous bus
         snc_redis:
             client: default # snc redis client.
