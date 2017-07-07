@@ -33,6 +33,7 @@ class Configuration implements ConfigurationInterface
                     ->cannotBeEmpty()
                     ->useAttributeAsKey('name')
                     ->prototype('array')
+                        ->performNoDeepMerging()
                         ->beforeNormalization()
                             ->ifTrue(function($v) { return is_scalar($v); })
                             ->then(function($v) { return [$v => []]; })
