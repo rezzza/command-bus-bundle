@@ -14,6 +14,7 @@
 
         <parameter key="rezzza_command_bus.event_dispatcher_bus.class">Rezzza\CommandBus\Domain\EventDispatcherBus</parameter>
         <parameter key="rezzza_command_bus.logger_bus.class">Rezzza\CommandBus\Domain\LoggerBus</parameter>
+        <parameter key="rezzza_command_bus.container_aware_event_dispatcher_bus.class">Rezzza\CommandBus\Domain\ContainerAwareEventDispatcherBus</parameter>
 
         <parameter key="rezzza_command_bus.snc_redis_provider.class">Rezzza\CommandBusBundle\Provider\SncRedis\SncRedisConsumerProvider</parameter>
 
@@ -54,8 +55,10 @@
 
         <service id="rezzza_command_bus.command_serializer" class="%rezzza_command_bus.command_serializer.class%" />
 
-        <service id="rezzza_command_bus.event_dispatcher" class="Symfony\Component\EventDispatcher\ContainerAwareEventDispatcher">
-            <argument type="service" id="service_container" />
+        <service id="rezzza_command_bus.event_dispatcher" class="%rezzza_command_bus.container_aware_event_dispatcher_bus.class%">
+            <call method="setContainer">
+                <argument type="service" id="service_container" />
+            </call>
         </service>
 
         <service id="rezzza_command_bus.redis_key_generator" class="%rezzza_command_bus.redis_key_generator.class%" />
