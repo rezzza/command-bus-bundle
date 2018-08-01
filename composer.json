@@ -1,5 +1,5 @@
 {
-    "name": "rezzza/command-bus-bundle",
+    "name": "inextensodigital/command-bus-bundle",
     "type": "symfony-bundle",
     "description": "rezzza/command-bus integration to Symfony",
     "keywords": ["command", "bus", "bundle"],
