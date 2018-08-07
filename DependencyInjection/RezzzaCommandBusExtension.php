@@ -46,6 +46,7 @@ class RezzzaCommandBusExtension extends Extension
                     new Reference('rezzza_command_bus.command_handler_locator.container'),
                     new Reference('rezzza_command_bus.command_handler.method_resolver')
                 ]);
+                $service->setPublic(true);
                 $container->setDefinition($commandBusServiceName, $service);
                 $this->decorateBus($commandBusServiceName, $container, $loggerNormalizer, $logLevels);
                 break;
@@ -199,7 +200,8 @@ class RezzzaCommandBusExtension extends Extension
             ->register($busServiceId.'.with_event_dispatcher', '%rezzza_command_bus.event_dispatcher_bus.class%')
             ->addArgument(new Reference('rezzza_command_bus.event_dispatcher'))
             ->addArgument(new Reference($originalBusServiceId))
-            ->setDecoratedService($busServiceId, $originalBusServiceId);
+            ->setDecoratedService($busServiceId, $originalBusServiceId)
+            ->setPublic(true)
         ;
 
         $container
@@ -209,7 +211,8 @@ class RezzzaCommandBusExtension extends Extension
             ->addArgument(new Reference($loggerNormalizer))
             ->addArgument($logLevels['handle'])
             ->addArgument($logLevels['error'])
-            ->setDecoratedService($busServiceId);
+            ->setDecoratedService($busServiceId)
+            ->setPublic(true)
         ;
     }
 
