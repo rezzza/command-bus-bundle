@@ -4,6 +4,7 @@ namespace Rezzza\CommandBusBundle\DependencyInjection;
 
 use Rezzza\CommandBus\Domain\CommandBusInterface;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -59,7 +60,7 @@ class RezzzaCommandBusExtension extends Extension
                 $this->decorateBus($commandBusServiceName, $container, $loggerNormalizer, $logLevels);
                 break;
             case 'service':
-                $container->setAlias($commandBusServiceName, $config['id']);
+                $container->setAlias($commandBusServiceName, new Alias($config['id'], true));
                 break;
             default:
                 throw new \LogicException(sprintf('Unknown command bus provider "%s"', $providerName));
