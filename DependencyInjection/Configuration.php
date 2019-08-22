@@ -30,7 +30,7 @@ class Configuration implements ConfigurationInterface
         $tb->root('rezzza_command_bus')
             ->children()
                 ->arrayNode('buses')
-                    ->cannotBeEmpty()
+                    ->requiresAtLeastOneElement()
                     ->useAttributeAsKey('name')
                     ->prototype('array')
                         ->performNoDeepMerging()
@@ -91,7 +91,7 @@ class Configuration implements ConfigurationInterface
     private function createConsumersNodeDefinition()
     {
         return (new ArrayNodeDefinition('consumers'))
-            ->cannotBeEmpty()
+            ->requiresAtLeastOneElement()
             ->useAttributeAsKey('name')
             ->prototype('array')
                 ->children()
