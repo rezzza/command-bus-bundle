@@ -26,8 +26,16 @@ class Configuration implements ConfigurationInterface
      */
     public function getConfigTreeBuilder()
     {
-        $tb = new TreeBuilder();
-        $tb->root('rezzza_command_bus')
+        $treeBuilder = new TreeBuilder('rezzza_command_bus');
+
+        if (method_exists($treeBuilder, 'getRootNode')) {
+            $rootNode = $treeBuilder->getRootNode();
+        } else {
+            // BC layer for symfony/config 4.1 and older
+            $rootNode = $treeBuilder->root('rezzza_command_bus');
+        }
+
+        $rootNode
             ->children()
                 ->arrayNode('buses')
                     ->requiresAtLeastOneElement()
@@ -85,7 +93,7 @@ class Configuration implements ConfigurationInterface
                 ->end()
             ->end();
 
-        return $tb;
+        return $treeBuilder;
     }
 
     private function createConsumersNodeDefinition()
