@@ -1,5 +1,5 @@
 {
-    "name": "inextensodigital/command-bus-bundle",
+    "name": "fulll/command-bus-bundle",
     "type": "symfony-bundle",
     "description": "rezzza/command-bus integration to Symfony",
     "keywords": ["command", "bus", "bundle"],
@@ -12,7 +12,7 @@
     "require": {
         "php": ">=5.5.0",
         "symfony/event-dispatcher": "~2.5|~3.0|~4.0",
-        "inextensodigital/command-bus": "^3.4"
+        "fulll/command-bus": "^3.4"
     },
     "autoload": {
         "psr-4": { "Rezzza\\CommandBusBundle\\": "" }
